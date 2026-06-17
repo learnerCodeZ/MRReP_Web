@@ -1,0 +1,12 @@
+<launch>
+  <!-- Rosbridge WebSocket server for web frontend -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+    <arg name="port" value="9090" />
+  </include>
+
+  <!-- HRZ costmap node — zones → costmap -->
+  <node pkg="mrrep_web_bridge" type="hrz_costmap_node.py" name="hrz_costmap_node" output="screen" />
+
+  <!-- HRP planner node — reference path → move_base -->
+  <node pkg="mrrep_web_bridge" type="hrp_planner_node.py" name="hrp_planner_node" output="screen" />
+</launch>

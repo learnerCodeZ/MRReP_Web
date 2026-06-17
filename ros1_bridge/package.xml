@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrrep_web_bridge</name>
+  <version>0.1.0</version>
+  <description>ROS1 bridge nodes for MRReP/MRHaD web frontend</description>
+  <maintainer email="user@todo.todo">user</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>move_base_msgs</depend>
+  <depend>actionlib</depend>
+  <depend>rosbridge_server</depend>
+</package>
