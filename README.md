@@ -66,6 +66,10 @@ ros1_bridge/     — ROS1 catkin package with bridge nodes
 
 Vite · React 18 · TypeScript · @react-three/fiber · drei · Zustand · roslib.js · Tailwind CSS
 
+## Acknowledgements
+
+- [Harriet9410](https://github.com/Harriet9410) — Mock Mode, A* navigation, map editing, and UI patterns are adapted from their [web1](https://github.com/Harriet9410/web1) project.
+
 ## Papers
 
 This project reproduces the core functionality of the following papers as a web-based interface:

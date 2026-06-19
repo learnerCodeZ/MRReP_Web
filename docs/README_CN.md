@@ -66,6 +66,10 @@ ros1_bridge/     — ROS1 catkin 桥接包
 
 Vite · React 18 · TypeScript · @react-three/fiber · drei · Zustand · roslib.js · Tailwind CSS
 
+## 致谢
+
+- [Harriet9410](https://github.com/Harriet9410) — Mock 模式、A* 导航、地图编辑及 UI 交互模式参考自其 [web1](https://github.com/Harriet9410/web1) 项目。
+
 ## 论文
 
 本项目以 Web 形式复现了以下论文的核心功能：
