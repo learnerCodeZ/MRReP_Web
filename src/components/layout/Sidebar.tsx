@@ -1,53 +1,107 @@
-import { useHrzStore } from '../../stores/hrzStore'
+import { useEffect, useRef, useState } from 'react'
 import ROSConnection from '../ros/ROSConnection'
 import ModeSelector from '../ui/ModeSelector'
 import ActionPanel from '../ui/ActionPanel'
+import { useRosStore } from '../../stores/rosStore'
+import { onMockLog, getMockLog, mockResetMap, mockClearMap } from '../../ros/mock'
+import type { AppMode } from '../ui/ModeSelector'
 
-export default function Sidebar() {
-  const { zones, removeZone } = useHrzStore()
+interface SidebarProps {
+  mode: AppMode
+  onModeChange: (mode: AppMode) => void
+}
+
+export default function Sidebar({ mode, onModeChange }: SidebarProps) {
+  const isMock = useRosStore((s) => s.isMock)
 
   return (
-    <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col p-3 gap-4 overflow-y-auto">
-      <h1 className="text-white font-bold text-sm tracking-wide">MRReP Web</h1>
-
-      <ROSConnection />
-
-      <div className="border-t border-gray-700 pt-3">
-        <p className="text-xs text-gray-400 font-medium mb-2">Edit Mode</p>
-        <ModeSelector />
+    <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col h-full overflow-hidden">
+      <div className="p-3 border-b border-gray-700">
+        <h1 className="text-sm font-bold text-white">MRReP / MRHaD</h1>
+        <p className="text-xs text-gray-400 mt-0.5">Web Editor</p>
       </div>
 
-      <div className="border-t border-gray-700 pt-3">
-        <ActionPanel />
+      <div className="p-3 border-b border-gray-700">
+        <div className="text-xs text-gray-400 mb-1.5 font-medium">ROS Connection</div>
+        <ROSConnection />
       </div>
 
-      {zones.length > 0 && (
-        <div className="border-t border-gray-700 pt-3">
-          <p className="text-xs text-gray-400 font-medium mb-1">HRZ Zones</p>
-          <ul className="space-y-1">
-            {zones.map((z, i) => (
-              <li key={z.id} className="flex items-center justify-between text-xs text-gray-300 bg-gray-700 rounded px-2 py-1">
-                <span>Zone {i + 1} ({z.points.length} pts)</span>
-                <button
-                  onClick={() => removeZone(z.id)}
-                  className="text-red-400 hover:text-red-300"
-                >
-                  x
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {isMock && <MapSelector />}
 
-      <div className="mt-auto border-t border-gray-700 pt-3">
-        <p className="text-[10px] text-gray-500">
-          Right-click: rotate | Middle: pan | Scroll: zoom
-          <br />
-          HRZ: Left-click vertices, click start to close
-          <br />
-          HRP: Left-drag to draw path
-        </p>
+      <div className="p-3 border-b border-gray-700">
+        <div className="text-xs text-gray-400 mb-1.5 font-medium">Mode</div>
+        <ModeSelector mode={mode} onChange={onModeChange} />
+      </div>
+
+      <div className="p-3 border-b border-gray-700">
+        <div className="text-xs text-gray-400 mb-1.5 font-medium">Actions</div>
+        <ActionPanel mode={mode} />
+      </div>
+
+      {isMock && <MockLogPanel />}
+
+      <div className="p-3 border-t border-gray-700 text-xs text-gray-500 mt-auto">
+        <div>Right-click: Rotate</div>
+        <div>Middle-click: Pan</div>
+        <div>Scroll: Zoom</div>
+      </div>
+    </div>
+  )
+}
+
+function MapSelector() {
+  return (
+    <div className="p-3 border-b border-gray-700">
+      <div className="text-xs text-gray-400 mb-1.5 font-medium">Map</div>
+      <div className="space-y-1.5">
+        <button
+          onClick={mockResetMap}
+          className="w-full text-xs bg-yellow-700 hover:bg-yellow-800 text-white px-2 py-1.5 rounded"
+        >
+          Default Map
+        </button>
+        <button
+          onClick={mockClearMap}
+          className="w-full text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1.5 rounded"
+        >
+          Blank Map
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MockLogPanel() {
+  const logRef = useRef<HTMLDivElement>(null)
+  const [lines, setLines] = useState<string[]>(() => getMockLog())
+
+  useEffect(() => {
+    setLines(getMockLog())
+    const unsub = onMockLog((newLog) => {
+      setLines(newLog)
+      requestAnimationFrame(() => {
+        if (logRef.current) {
+          logRef.current.scrollTop = logRef.current.scrollHeight
+        }
+      })
+    })
+    return unsub
+  }, [])
+
+  return (
+    <div className="p-3 border-b border-gray-700 flex-1 min-h-0 flex flex-col">
+      <div className="text-xs text-purple-400 mb-1.5 font-medium">Mock Log</div>
+      <div
+        ref={logRef}
+        className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 text-xs text-gray-400 font-mono leading-relaxed min-h-0 max-h-48"
+      >
+        {lines.length === 0 ? (
+          <span className="text-gray-600">Waiting for events...</span>
+        ) : (
+          lines.map((line, i) => (
+            <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+          ))
+        )}
       </div>
     </div>
   )

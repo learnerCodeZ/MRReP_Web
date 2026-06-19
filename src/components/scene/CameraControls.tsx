@@ -1,0 +1,33 @@
+import { useRef, useEffect } from 'react'
+import * as THREE from 'three'
+import { OrbitControls } from '@react-three/drei'
+
+interface CameraControlsProps {
+  mode: 'navigate' | 'hrz' | 'hrp' | 'mapedit'
+}
+
+export default function CameraControls({ mode }: CameraControlsProps) {
+  const controlsRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.mouseButtons = {
+        LEFT: -1,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.ROTATE,
+      }
+    }
+  }, [mode])
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableDamping
+      dampingFactor={0.1}
+      minDistance={1}
+      maxDistance={100}
+      maxPolarAngle={Math.PI / 2.1}
+      target={[5, 0, 5]}
+    />
+  )
+}

@@ -35,3 +35,7 @@ export interface PoseStampedMsg {
   header: { seq: number; stamp: { secs: number; nsecs: number }; frame_id: string }
   pose: { position: { x: number; y: number; z: number }; orientation: { x: number; y: number; z: number; w: number } }
 }
+
+export interface RosMsg_String {
+  data: string
+}

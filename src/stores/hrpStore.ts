@@ -1,19 +1,34 @@
-// Ref: Kosaka et al., "MRReP," arXiv:2604.00059, 2025 — HRP path data model
 import { create } from 'zustand'
 import type { Point2D } from './hrzStore'
 
 interface HrpState {
   path: Point2D[]
-  robotPos: Point2D | null
-  setPath: (p: Point2D[]) => void
-  setRobotPos: (p: Point2D | null) => void
+  isDrawing: boolean
+  startDrawing: () => void
+  addPoint: (p: Point2D) => void
+  finishDrawing: () => void
+  cancelDrawing: () => void
+  loadPath: (path: Point2D[]) => void
   clearPath: () => void
 }
 
 export const useHrpStore = create<HrpState>((set) => ({
   path: [],
-  robotPos: null,
-  setPath: (p) => set({ path: p }),
-  setRobotPos: (p) => set({ robotPos: p }),
-  clearPath: () => set({ path: [] }),
+  isDrawing: false,
+
+  startDrawing: () => set({ isDrawing: true, path: [] }),
+
+  addPoint: (p) =>
+    set((s) => {
+      if (!s.isDrawing) return s
+      return { path: [...s.path, p] }
+    }),
+
+  finishDrawing: () => set({ isDrawing: false }),
+
+  cancelDrawing: () => set({ isDrawing: false, path: [] }),
+
+  loadPath: (path) => set({ path }),
+
+  clearPath: () => set({ path: [], isDrawing: false }),
 }))

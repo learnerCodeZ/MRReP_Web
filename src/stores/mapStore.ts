@@ -6,7 +6,7 @@ export interface MapInfo {
   resolution: number
   width: number
   height: number
-  data: Int8Array | null
+  data: number[] | null
 }
 
 interface MapState extends MapInfo {

@@ -1,32 +1,52 @@
-import { useMemo } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { useMapStore } from '../../stores/mapStore'
-import { renderMapTexture } from '../../utils/mapRenderer'
+import { renderMapToCanvas } from '../../utils/mapRenderer'
 
 export default function MapFloor() {
-  const { data, width, height, resolution } = useMapStore()
+  const data = useMapStore((s) => s.data)
+  const width = useMapStore((s) => s.width)
+  const height = useMapStore((s) => s.height)
+  const resolution = useMapStore((s) => s.resolution)
+  const meshRef = useRef<THREE.Mesh>(null)
 
-  const texture = useMemo(() => {
-    if (!data || width === 0 || height === 0) return null
-    return renderMapTexture(data, width, height)
-  }, [data, width, height])
+  const offlineCanvas = useMemo(() => document.createElement('canvas'), [])
 
-  const mapWidth = width * resolution
-  const mapHeight = height * resolution
+  useEffect(() => {
+    if (!data) return
+    renderMapToCanvas(offlineCanvas, { width, height, resolution, originX: 0, originY: 0, data })
+    if (meshRef.current) {
+      const tex = new THREE.CanvasTexture(offlineCanvas)
+      tex.flipY = false
+      tex.minFilter = THREE.LinearFilter
+      tex.magFilter = THREE.NearestFilter
+      ;(meshRef.current.material as THREE.MeshBasicMaterial).map = tex
+      ;(meshRef.current.material as THREE.MeshBasicMaterial).needsUpdate = true
+      const w = width * resolution
+      const h = height * resolution
+      meshRef.current.scale.set(w, h, 1)
+      meshRef.current.position.set(w / 2, 0, h / 2)
+    }
+  }, [data, width, height, resolution, offlineCanvas])
 
-  if (!texture) {
+  if (!data) {
     return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial color="#333" />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, -0.01, 5]} receiveShadow>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial color="#3a3a3a" />
       </mesh>
     )
   }
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[mapWidth / 2, -0.01, mapHeight / 2]} receiveShadow>
-      <planeGeometry args={[mapWidth, mapHeight]} />
-      <meshStandardMaterial map={texture} />
+    <mesh
+      ref={meshRef}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.01, 0]}
+      receiveShadow
+    >
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial side={THREE.DoubleSide} />
     </mesh>
   )
 }

@@ -1,4 +1,3 @@
-// Ref: Kosaka et al., "MRHaD," arXiv:2504.00580, 2025 — HRZ zone data model
 import { create } from 'zustand'
 
 export interface Point2D {
@@ -14,9 +13,12 @@ export interface HRZone {
 interface HrzState {
   zones: HRZone[]
   currentPoints: Point2D[]
+  isDrawing: boolean
   addPoint: (p: Point2D) => void
   closeZone: () => void
+  cancelDrawing: () => void
   removeZone: (id: string) => void
+  loadZones: (zones: HRZone[]) => void
   clearAll: () => void
   clearCurrent: () => void
 }
@@ -24,7 +26,26 @@ interface HrzState {
 export const useHrzStore = create<HrzState>((set, get) => ({
   zones: [],
   currentPoints: [],
-  addPoint: (p) => set((s) => ({ currentPoints: [...s.currentPoints, p] })),
+  isDrawing: false,
+
+  addPoint: (p) => {
+    const { currentPoints, isDrawing } = get()
+    if (!isDrawing) {
+      set({ isDrawing: true, currentPoints: [p] })
+      return
+    }
+    const first = currentPoints[0]
+    if (currentPoints.length >= 3 && first) {
+      const dx = p.x - first.x
+      const dz = p.z - first.z
+      if (Math.sqrt(dx * dx + dz * dz) < 0.3) {
+        get().closeZone()
+        return
+      }
+    }
+    set({ currentPoints: [...currentPoints, p] })
+  },
+
   closeZone: () => {
     const { currentPoints, zones } = get()
     if (currentPoints.length < 3) return
@@ -32,9 +53,16 @@ export const useHrzStore = create<HrzState>((set, get) => ({
       id: crypto.randomUUID(),
       points: [...currentPoints],
     }
-    set({ zones: [...zones, zone], currentPoints: [] })
+    set({ zones: [...zones, zone], currentPoints: [], isDrawing: false })
   },
+
+  cancelDrawing: () => set({ currentPoints: [], isDrawing: false }),
+
   removeZone: (id) => set((s) => ({ zones: s.zones.filter((z) => z.id !== id) })),
-  clearAll: () => set({ zones: [], currentPoints: [] }),
+
+  loadZones: (zones) => set({ zones }),
+
+  clearAll: () => set({ zones: [], currentPoints: [], isDrawing: false }),
+
   clearCurrent: () => set({ currentPoints: [] }),
 }))

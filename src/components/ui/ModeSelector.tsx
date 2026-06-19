@@ -1,22 +1,34 @@
 import { useRosStore, type EditMode } from '../../stores/rosStore'
 
-const MODES: { key: EditMode; label: string }[] = [
-  { key: 'navigate', label: 'Navigate' },
-  { key: 'hrz', label: 'HRZ Edit' },
-  { key: 'hrp', label: 'HRP Edit' },
+export type AppMode = EditMode
+
+interface ModeSelectorProps {
+  mode: AppMode
+  onChange: (mode: AppMode) => void
+}
+
+const allModes: { key: AppMode; label: string; mockOnly: boolean }[] = [
+  { key: 'navigate', label: 'Navigate', mockOnly: false },
+  { key: 'mapedit', label: 'Map Edit', mockOnly: true },
+  { key: 'hrz', label: 'HRZ Zone', mockOnly: false },
+  { key: 'hrp', label: 'HRP Path', mockOnly: false },
 ]
 
-export default function ModeSelector() {
-  const { editMode, setEditMode } = useRosStore()
+export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
+  const isMock = useRosStore((s) => s.isMock)
+
+  const visibleModes = allModes.filter((m) => !m.mockOnly || isMock)
+
+  const safeMode = visibleModes.find((m) => m.key === mode) ? mode : 'navigate'
 
   return (
-    <div className="flex gap-1">
-      {MODES.map((m) => (
+    <div className="flex flex-wrap gap-1">
+      {visibleModes.map((m) => (
         <button
           key={m.key}
-          onClick={() => setEditMode(m.key)}
-          className={`flex-1 py-1.5 text-xs font-medium rounded ${
-            editMode === m.key
+          onClick={() => onChange(m.key)}
+          className={`text-xs px-3 py-1.5 rounded font-medium transition ${
+            safeMode === m.key
               ? 'bg-blue-600 text-white'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}

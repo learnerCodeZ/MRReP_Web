@@ -1,35 +1,49 @@
-import * as THREE from 'three'
+export interface OccupancyGridData {
+  width: number
+  height: number
+  resolution: number
+  originX: number
+  originY: number
+  data: number[]
+}
 
-export function renderMapTexture(
-  data: Int8Array,
-  width: number,
-  height: number,
-): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas')
+const UNKNOWN = 205
+const FREE = 0
+const OCCUPIED = 254
+
+export function renderMapToCanvas(
+  canvas: HTMLCanvasElement,
+  grid: OccupancyGridData,
+): void {
+  const { width, height, data } = grid
   canvas.width = width
   canvas.height = height
-  const ctx = canvas.getContext('2d')!
-  const imgData = ctx.createImageData(width, height)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
 
+  const imgData = ctx.createImageData(width, height)
   for (let i = 0; i < data.length; i++) {
     const val = data[i]
-    let brightness: number
-    if (val === -1) {
-      brightness = 128
+    let gray: number
+    if (val === UNKNOWN) {
+      gray = 128
+    } else if (val === FREE) {
+      gray = 254
+    } else if (val === OCCUPIED) {
+      gray = 0
+    } else if (val === -1) {
+      gray = 128
     } else {
-      brightness = 255 - Math.round((val / 100) * 255)
+      gray = 254 - val
     }
-    imgData.data[i * 4] = brightness
-    imgData.data[i * 4 + 1] = brightness
-    imgData.data[i * 4 + 2] = brightness
-    imgData.data[i * 4 + 3] = 255
+    const srcRow = Math.floor(i / width)
+    const srcCol = i % width
+    const dstRow = height - 1 - srcRow
+    const dstIdx = dstRow * width + srcCol
+    imgData.data[dstIdx * 4] = gray
+    imgData.data[dstIdx * 4 + 1] = gray
+    imgData.data[dstIdx * 4 + 2] = gray
+    imgData.data[dstIdx * 4 + 3] = 255
   }
-
   ctx.putImageData(imgData, 0, 0)
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.flipY = false
-  texture.minFilter = THREE.LinearFilter
-  texture.magFilter = THREE.LinearFilter
-  return texture
 }
